@@ -37,7 +37,7 @@ while :; do
 
 	# Get an up to date ID for the touchscreen device, because there's also a slave keyboard with the same name annoyingly, so we can't reference by name alone...
 	# (the spaces at the end of this grep are important to distinguish between the main input device, and the pen which has the same prefix)
-	sedResult=`echo \`xinput list | grep "slave  pointer" | grep "ELAN9008:00 04F3:2A46  "\` | sed -e 's/^.* id=\([0-9]\+\) .*$/\1/g'`
+	sedResult=`echo \`xinput list | grep "slave  pointer" | grep "$touchscreenDevice  "\` | sed -e 's/^.* id=\([0-9]\+\) .*$/\1/g'`
 
 	if [ "$sedResult" != "" ] && [ "$sedResult" != "$touchscreenID" ]; then
 		touchscreenID=$sedResult
