@@ -8,3 +8,5 @@ Don't expect this repository to grow very rapidly, and don't expect any of these
 Everything here is released freely under the GNU GPL v3. Take what you like and evolve into great things, but please get in touch if our code ends up in something cool =).
 
 https://www.qweb.co.uk
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N1GXJ1U)
