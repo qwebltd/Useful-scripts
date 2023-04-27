@@ -1,8 +1,13 @@
 <script type="text/javascript">
-  // Conversion functions by QWeb Ltd to swap between RGB and HSL colour codes
-
-  // RGBtoHSL() returns an array where elements 0, 1, an 2 refer to the H, S, and L components respectively.
-  // HSLtoRGB() returns an array where elements 0, 1, an 2 refer to the R, G, and B components respectively.
+  /* Conversion functions by QWeb Ltd to swap between RGB and HSL colour codes
+   *
+   * RGBtoHSL(r, g, b) takes a given RGB and returns an array where elements 0, 1, an 2 refer to the H, S, and L components respectively.
+   * HSLtoRGB(h, s, l) takes a given HSL and returns an array where elements 0, 1, an 2 refer to the R, G, and B components respectively.
+   *
+   * Example usage:
+   * var hsl = RGBtoHSL(255, 150, 30);
+   * alert('This colour has a hugh of ' + hsl[0] + ', a saturation of ' + hsl[1] + ' and a luminosity of ' + hsl[2]);
+   */
 
   function RGBtoHSL(r, g, b) {
     // This assumes r, g, and b are in integer notation. I.e. 0 to 255 rather than 0 to 1.
