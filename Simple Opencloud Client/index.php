@@ -1,15 +1,17 @@
 <?php
 /*
-	This is a simple OpenCloud client written in PHP by QWeb Ltd, originally built to connect to Rackspace Cloud Files storage buckets and delete
-	containers in bulk.
+	This is a simple OpenCloud/OpenStack client written in PHP by QWeb Ltd, originally built to connect to Rackspace Cloud Files storage buckets
+	and delete containers in bulk.
 
 	Should run on just about any PHP server. Tested on LAMP stack.
 
 	This uses the PHP OpenCloud libraries from https://github.com/rackspace/php-opencloud. You'll need to pull that library and copy it into
-	/required/php-opencloud-working for this client to function.
+	/required/php-opencloud-working for this client to function, even if you don't intend to use Rackspace. You could instead use a different
+	OpenStack SDK but this would require modifying more code.
 
-	The code here is very minimalist. There's no real styling, no real security, and no real error checking. If you intend to use this you really
-	should expand with at least some kind of a login mechanic, and wrap some of the functionality with better confirmation prompts and whatnot.
+	The code here is very minimalist. There's no real styling, no real security, and no real error checking. If you intend to use this in a
+	production environment you really should expand with at least some kind of a login mechanic, and wrap some of the functionality with better
+	confirmation prompts and whatnot. That said, the minimalism makes it really easy to follow and expand upon.
 
 	Some operations might take a long time to complete. For example deleting containers with thousands of files. Depending on your server config,
 	this might cauase timeouts to occur but the CDN itself will continue to parse the operation until completion. Again, you might want to expand
@@ -35,10 +37,20 @@
 	$urlPrefix = '/openstack-client'; // If running in a sub directory, set this up inclusive of prefixing slash but not suffixing.
 	$password = 'qwerty'; // Populate this with some kind of a password and then make sure you access this script with ?password= in the url
 
+	// If using Rackspace Cloud, populate these variables:
 	$rackspaceUsername = ''; // Your Rackspace Cloud username
 	$rackspaceAPIKey = ''; // Your Rackspace Cloud users API key, found in "My Profile & Settings" from the menu in the top right
 	$rackspaceRegion = 'LON'; // Your Rackspace Files region code
 
+	// If using another OpenStack service, populate these variables:
+	$openStackUsername = ''; // Your OpenStack username
+	$openStackPassword = ''; // Your OpenStack password
+	$openStackTenantId = ''; // Your OpenStack tenant ID, provided by the OpenStack service
+	$openStackKeystoneUrl = ''; // Your OpenStack keystone url, provided by the OpenStack service
+
+	// Finally, uncomment one of these lines as appropriate
+	// $mode = 'rackspace';
+	// $mode = 'openstack';
 /*
 	THAT'S IT, YOU'RE DONE!
 */
@@ -52,19 +64,35 @@
 		die('Authorisation denied.');
 	}
 
-	if($rackspaceUsername == '' || $rackspaceAPIKey == '')
+	if(!isset($mode))
+		die('Set your Rackspace or OpenStack credentials up first.');
+
+	if($mode == 'rackspace' && ($rackspaceUsername == '' || $rackspaceAPIKey == ''))
 		die('Set your Rackspace credentials up first.');
+	elseif($mode == 'openstack' && ($openStackUsername == '' || $openStackPassword == '' || $openStackTenantId == ''))
+		die('Set your OpenStack credentials up first.');
 
-	// Rackspace Opencloud API
+	// PHP Opencloud API
 	require_once('required/php-opencloud-working/vendor/autoload.php');
-	use OpenCloud\Rackspace;
 
-	$rackspaceClient = new Rackspace(Rackspace::US_IDENTITY_ENDPOINT, array(
-		'username' => $rackspaceUsername,
-		'apiKey'   => $rackspaceAPIKey
-	));
+	if($mode == 'rackspace') {
+		use OpenCloud\Rackspace;
 
-	$objectStoreService = $rackspaceClient->objectStoreService(null, $rackspaceRegion);
+		$rackspaceClient = new Rackspace(Rackspace::US_IDENTITY_ENDPOINT, array(
+			'username' => $rackspaceUsername,
+			'apiKey'   => $rackspaceAPIKey
+		));
+
+		$objectStoreService = $rackspaceClient->objectStoreService(null, $rackspaceRegion);
+	} else {
+		$openStackClient = new OpenCloud\OpenStack($openStackKeystoneUrl, array(
+			'username' => $openStackUsername,
+			'password' => $openStackPassword,
+			'tenantId' => $openStackTenantId,
+		));
+
+		$objectStoreService = $openStackClient->identityService();
+	}
 
 	// Pre render scripts
 	if(isset($_POST['create-container'])) {
