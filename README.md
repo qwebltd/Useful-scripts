@@ -9,4 +9,7 @@ Everything here is released freely under the GNU GPL v3. Take what you like and 
 
 https://www.qweb.co.uk
 
+## Support
+I'm an advocate of open source, FOSS, FSF, and such. All of the scripts and tools within this repository are provided for free in the hopes they're useful to somebody. If you found something here to be helpful and want to show your support, donations are always greatly appreciated.
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N1GXJ1U)
