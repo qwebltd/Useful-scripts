@@ -35,7 +35,7 @@ The following functions are available within this wrapper:
 | --- | --- |
 | dbQuery( string $sql [, int $cacheTime] ) | Executes an SQL query and returns a result handler. If you pass an integer as its optional second parameter, a cache of the result will be created that expires in that number of seconds and this cache will be returned for subsequent identical SQL queries. |
 | dbUnbufferedQuery( string $sql ) | Executes an SQL query without waiting for the result. Use for INSERT and UPDATE queries that don't need executing before code continues. |
-| dbEscape( string $text | Escapes a given string ready for safely injecting into an SQL query. |
+| dbEscape( string $text ) | Escapes a given string ready for safely injecting into an SQL query. |
 | dbGetLastInsertId() | Returns the auto increment ID assigned to the last inserted record. Useful as a follow-up to INSERT queries. E.g. `dbQuery('INSERT INTO tblSomewhere ( fldSomething ) VALUES ( \'Foobah\' )'); $recordID = dbGetLastInsertId();` |
 | dbFetch( $recordset ) | Returns the first record in a given recordset as an associative array. This should be used when you only want a single record returned. E.g. `$record = dbFetch(dbQuery('SELECT * FROM tblSomewhere WHERE fldID = 1 LIMIT 1'));` |
 | dbFetchAll ( $recordset ) | Returns an associative array of all of the records in a given recordset. The individual records are also associative arrays of their fields. This should be used when you need to iterate each row. E.g. `foreach(dbFetchAll(dbQuery('SELECT fldSomething FROM tblSomewhere')) as $key => $val) { echo $val['fldSomething']."\n"; }` |
