@@ -61,7 +61,7 @@
 				$cachetime = 0;
 
 			if($cachetime > 0) {
-				if(is_file($_SERVER['DOCUMENT_ROOT'].'/sql-cache/'.sha1($sql).'.txt')) {
+				if(is_file($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.sha1($sql).'.txt')) {
 					$data = file_get_contents($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.sha1($sql).'.txt');
 					$data2 = json_decode($data, true);
 
