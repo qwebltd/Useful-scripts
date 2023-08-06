@@ -21,6 +21,10 @@
 
 		This version also includes dbClearCache(), useful to call after queries that need to take immediate effect.
 
+		This version includes a dbSwitchDatabase() function, and keeps track of the connected host and database name for cache files so that a project can change databases and invoke the same SQL without cache files causing conflicts.
+
+		This version also replaces numerous sha1() calls in dbQuery() with a single instance for better performance.
+
 		---
 
 		This version incorporates encryption functions for GDPR compliance.
@@ -32,15 +36,37 @@
 		dbDecipher() is a function that reverses an obfuscated string, allowing for securely saved data to be reverted back into useful form again.
 	*/
 
-	// Initiation
-	if(function_exists('mysqli_connect')) {
-		$db = mysqli_connect($dbHostname, $dbUsername, $dbPassword, $dbDatabase);
-		mysqli_set_charset($db, 'utf8');
-	} else {
-		$db = mysql_connect($dbHostname, $dbUsername, $dbPassword);
-		mysql_set_charset('utf8', $db);
-		mysql_select_db($dbDatabase);
+	// Function to toggle between databases. This comes before the initiation routine to make sure it exists for calling.
+	if(!function_exists('dbSwitchDatabase')) {
+		function dbSwitchDatabase($dbHostname, $dbDatabase, $dbUsername, $dbPassword) {
+			global $db;
+			global $dbCachePrefix;
+
+			// Close existing connection
+			if($db != false) {
+				if(function_exists('mysqli_close'))
+					mysqli_close($db);
+				else
+					mysql_close($db);
+			}
+
+			if(function_exists('mysqli_connect')) {
+				$db = mysqli_connect($dbHostname, $dbUsername, $dbPassword, $dbDatabase);
+				mysqli_set_charset($db, 'utf8');
+			} else {
+				$db = mysql_connect($dbHostname, $dbUsername, $dbPassword);
+				mysql_set_charset('utf8', $db);
+				mysql_select_db($dbDatabase);
+			}
+
+			$dbCachePrefix = $dbHostname.$dbDatabase;
+		}
 	}
+
+	// Initiation
+	$db = false; // Need this to exist before dbSwitchDatabase() tries to use it
+	$dbCachePrefix = '';
+	dbSwitchDatabase($dbHostname, $dbDatabase, $dbUsername, $dbPassword);
 
 	/*
 		dbFetch() normally uses MySQL's in-built recordset iteration to grab the next result each time it's called.
@@ -55,18 +81,21 @@
 	if(!function_exists('dbQuery')) {
 		function dbQuery($sql, $cachetime = 0) {
 			global $db;
+			global $dbCachePrefix;
 
 			// incase we can't get to the cache directory
 			if($cachetime > 0 && !is_dir($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'))
 				$cachetime = 0;
 
 			if($cachetime > 0) {
-				if(is_file($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.sha1($sql).'.txt')) {
-					$data = file_get_contents($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.sha1($sql).'.txt');
+				$cacheFile = sha1($dbCachePrefix.$sql);
+
+				if(is_file($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.$cacheFile.'.txt')) {
+					$data = file_get_contents($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.$cacheFile.'.txt');
 					$data2 = json_decode($data, true);
 
 					if($data2['time'] >= time() - $cachetime)
-						$result = sha1($sql).'.txt.'.rand(); // The random suffix is to allow multiple calls to dbQuery with the same SQL, to be handled individually by the iterator
+						$result = $cacheFile.'.txt.'.rand(); // The random suffix is to allow multiple calls to dbQuery with the same SQL, to be handled individually by the iterator
 				}
 
 				if(!isset($result)) {
@@ -80,12 +109,12 @@
 						'results' => dbFetchAll($result)
 					));
 
-					if(is_file($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.sha1($sql).'.txt'))
-						unlink($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.sha1($sql).'.txt');
+					if(is_file($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.$cacheFile.'.txt'))
+						unlink($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.$cacheFile.'.txt');
 
-					file_put_contents($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.sha1($sql).'.txt', $data);
+					file_put_contents($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.$cacheFile.'.txt', $data);
 
-					$result = sha1($sql).'.txt.'.rand(); // The random suffix is to allow multiple calls to dbQuery with the same SQL, to be handled individually by the iterator
+					$result = $cacheFile.'.txt.'.rand(); // The random suffix is to allow multiple calls to dbQuery with the same SQL, to be handled individually by the iterator
 				}
 			} else {
 				if(function_exists('mysqli_query'))
@@ -112,8 +141,12 @@
 	// Line indents etc have to be exactly as per the query being uncached
 	if(!function_exists('dbClearQueryCache')) {
 		function dbClearQueryCache($sql) {
-			if(is_file($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.sha1($sql).'.txt')) {
-				unlink($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.sha1($sql).'.txt');
+			global $dbCachePrefix;
+
+			$cacheFile = sha1($dbCachePrefix.$sql);
+
+			if(is_file($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.$cacheFile.'.txt')) {
+				unlink($_SERVER['DOCUMENT_ROOT'].DIRECTORY_SEPARATOR.'sql-cache'.DIRECTORY_SEPARATOR.$cacheFile.'.txt');
 				return true;
 			} else
 				return false;
