@@ -33,6 +33,7 @@ The following functions are available within this wrapper:
 
 | Function | Purpose |
 | --- | --- |
+| dbSwitchDatabase( string $hostname, string $database, string $username, string $password ) | Switches to a given database at a given host, using the given username and password. This is called automatically when the wrapper is included, but can be used to toggle between databases at any point. Cache files are per host and database name combination to prevent conflicts when the same SQL is invoked on different databases. |
 | dbQuery( string $sql [, int $cacheTime] ) | Executes an SQL query and returns a result handler. If you pass an integer as its optional second parameter, a cache of the result will be created that expires in that number of seconds and this cache will be returned for subsequent identical SQL queries. |
 | dbUnbufferedQuery( string $sql ) | Executes an SQL query without waiting for the result. Use for INSERT and UPDATE queries that don't need executing before code continues. |
 | dbEscape( string $text ) | Escapes a given string ready for safely injecting into an SQL query. |
