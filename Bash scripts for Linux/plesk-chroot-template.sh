@@ -91,6 +91,9 @@ sudo ./update_chroot.sh --add curl
 sudo ./update_chroot.sh --add named
 sudo ./update_chroot.sh --add nslookup
 
+# Adds /usr/bin/env and /bin/env to the environment. Some frameworks like PHP Composer and Grav execute programs through this.
+sudo ./update_chroot.sh --add env
+
 # Adds ldconfig to the environment. This is apparently already done with newer versions of the update_chroot script, but there's no harm in doing it manually anyway.
 sudo ./update_chroot.sh --add ldconfig
 sudo chroot /var/www/vhosts/chroot /bin/sh -c "ldconfig -v"
