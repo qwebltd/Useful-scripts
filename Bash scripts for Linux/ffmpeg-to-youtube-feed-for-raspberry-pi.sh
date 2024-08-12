@@ -4,7 +4,7 @@
 
 # Just populate the STREAM_URL and STREAM_KEY variables with your Youtube stream credentials and run this script with a & suffix to make it a background process:
 
-# wget https://raw.githubusercontent.com/qwebltd/Useful-scripts/main/Bash%20scripts%20for%20Linux/ffmpeg-to-youtube-feed-for-raspberry-pi.sh youtube-feed.sh
+# wget https://raw.githubusercontent.com/qwebltd/Useful-scripts/main/Bash%20scripts%20for%20Linux/ffmpeg-to-youtube-feed-for-raspberry-pi.sh -O youtube-feed.sh
 # chmod +x ./youtube-feed.sh
 # nano ./youtube-feed.sh
 #   (edit credentials)
