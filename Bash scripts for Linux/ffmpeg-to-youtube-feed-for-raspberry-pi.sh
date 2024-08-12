@@ -13,7 +13,7 @@
 # 5v 3a power in required, else fps suffers because USBs become under-supplied. Most phone chargers are only 1.8a - 2a
 # USB 2 ports seem to work more reliably than USB 3 for some reason
 # h264_v4l2m2m codec uses the Pi's hardware encoder, which only supports up to 1080p. Bitrate, maxrate, and bufsize are tuned for 1080p at 30fps
-# h264_v4l2m2m codec can also hardware encode, but doesn't work with mjpeg and yuyv422 gives a lower input fps
+# h264_v4l2m2m codec can also hardware decode, but doesn't work with mjpeg and yuyv422 gives a lower input fps
 # Audio is set up for silence. Youtube claims to require AAC but the aac encoder slows the fps and the pcm stream from lavfi seems to work anyway
 
 AUDIO_IN="-f lavfi -i anullsrc=channel_layout=mono:sample_rate=44100"
