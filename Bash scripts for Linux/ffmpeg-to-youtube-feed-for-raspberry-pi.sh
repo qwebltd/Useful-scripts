@@ -45,7 +45,7 @@ VERBOSITY="${VERBOSITY} -hide_banner -loglevel error -y"
 killall ffmpeg &> /dev/null
 
 # And kill any previous iterations of this script, since they might be stuck in the waiting for connection state
-kill -9 $(pidof -x ${BASH_SOURCE[0]} | grep -v $$) &> /dev/null
+kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) &> /dev/null
 
 # Wait for a connection
 while ! ping -c 1 -W 1 youtube.com &> /dev/null; do
