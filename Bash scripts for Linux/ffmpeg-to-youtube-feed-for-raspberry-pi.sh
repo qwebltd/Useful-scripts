@@ -53,6 +53,9 @@ while ! ping -c 1 -W 1 youtube.com &> /dev/null; do
   sleep 1
 done
 
+# Waits 1 second just to make sure the camera is free again before v4l2-ctl tries to control it
+sleep 1
+
 # Then run
 v4l2-ctl $VIDEO_FOR_LINUX_CONTROLS &> /dev/null
 ffmpeg -nostdin $VERBOSITY -use_wallclock_as_timestamps 1 -re $AUDIO_IN $VIDEO_IN -codec:a $AUDIO_OUT -codec:v $VIDEO_OUT -f flv $STREAM_URL/$STREAM_KEY &
