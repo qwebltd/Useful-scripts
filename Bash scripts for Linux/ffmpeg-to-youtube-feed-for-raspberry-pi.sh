@@ -30,7 +30,7 @@ VIDEO_IN="-f v4l2 -framerate 30 -video_size 1920x1080 -input_format mjpeg -threa
 VIDEO_FOR_LINUX_CONTROLS="-d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat=MJPG"
 
 AUDIO_OUT="copy"
-VIDEO_OUT="h264_v4l2m2m -b:v 6000k -maxrate 6000k -bufsize 12000k -g 15 -bf 2 -pix_fmt yuv420p"
+VIDEO_OUT="h264_v4l2m2m -b:v 6000k -maxrate 6000k -bufsize 12000k -g 15 -bf 2 -pix_fmt yuv420p -strict experimental"
 
 # Replace with your own Youtube live stream credentials
 STREAM_URL="rtmp://a.rtmp.youtube.com/live2"
@@ -41,21 +41,21 @@ VERBOSITY=""
 # Comment this line if debugging. Otherwise ffmpeg won't output anything unless an error occurs
 VERBOSITY="${VERBOSITY} -hide_banner -loglevel error -y"
 
-# Make sure ffmpeg isn't still running from previous iterations
-killall ffmpeg &> /dev/null
-
-# And kill any previous iterations of this script, since they might be stuck in the waiting for connection state
-kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) &> /dev/null
-
 # Wait for a connection
 while ! ping -c 1 -W 1 youtube.com &> /dev/null; do
   echo "Waiting for connection..."
   sleep 1
 done
 
+# Make sure ffmpeg isn't still running from previous iterations
+killall ffmpeg &> /dev/null
+
+# And kill any previous iterations of this script, since they might be stuck in the waiting for connection state
+kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) &> /dev/null
+
 # Waits 1 second just to make sure the camera is free again before v4l2-ctl tries to control it
 sleep 1
 
 # Then run
 v4l2-ctl $VIDEO_FOR_LINUX_CONTROLS &> /dev/null
-ffmpeg -nostdin $VERBOSITY -use_wallclock_as_timestamps 1 -re $AUDIO_IN $VIDEO_IN -codec:a $AUDIO_OUT -codec:v $VIDEO_OUT -f flv $STREAM_URL/$STREAM_KEY &
+ffmpeg -nostdin $VERBOSITY -use_wallclock_as_timestamps 1 -re -fflags +genpts+nobuffer $AUDIO_IN $VIDEO_IN -codec:a $AUDIO_OUT -codec:v $VIDEO_OUT -f flv $STREAM_URL/$STREAM_KEY &
