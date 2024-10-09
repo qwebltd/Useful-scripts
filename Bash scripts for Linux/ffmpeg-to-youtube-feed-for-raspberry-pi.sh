@@ -42,9 +42,9 @@ VERBOSITY=""
 VERBOSITY="${VERBOSITY} -hide_banner -loglevel error -y"
 
 # Wait for a connection
-while ! ping -c 1 -W 1 youtube.com &> /dev/null; do
+while ! ping -c 1 -W 1 a.rtmp.youtube.com &> /dev/null; do
   echo "Waiting for connection..."
-  sleep 1
+  sleep 0.1
 done
 
 # Make sure ffmpeg isn't still running from previous iterations
@@ -53,9 +53,10 @@ killall ffmpeg &> /dev/null
 # And kill any previous iterations of this script, since they might be stuck in the waiting for connection state
 kill -9 $(pgrep -f ${BASH_SOURCE[0]} | grep -v $$) &> /dev/null
 
-# Waits 1 second just to make sure the camera is free again before v4l2-ctl tries to control it
-sleep 1
+# Then run, but wait until the device is ready again because the above kills can take a moment
+while ! v4l2-ctl $VIDEO_FOR_LINUX_CONTROLS &> /dev/null; do
+  echo "Waiting for device..."
+  sleep 0.1
+done
 
-# Then run
-v4l2-ctl $VIDEO_FOR_LINUX_CONTROLS &> /dev/null
 ffmpeg -nostdin $VERBOSITY -use_wallclock_as_timestamps 1 -re -fflags +genpts+nobuffer $AUDIO_IN $VIDEO_IN -codec:a $AUDIO_OUT -codec:v $VIDEO_OUT -f flv $STREAM_URL/$STREAM_KEY &
