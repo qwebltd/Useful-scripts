@@ -72,7 +72,7 @@ while [[ $ffmpeg_exit_code != "255" ]]; do
   echo "Device ready."
 
   # Launch ffmpeg and grab its PID
-  ffmpeg -nostdin $VERBOSITY -use_wallclock_as_timestamps 1 -re -fflags +genpts+nobuffer $AUDIO_IN $VIDEO_IN -codec:a $AUDIO_OUT -codec:v $VIDEO_OUT -f flv -flvflags no_duration_filesize $STREAM_URL/$STREAM_KEY &
+  ffmpeg -nostdin $VERBOSITY -xerror -use_wallclock_as_timestamps 1 -re -fflags +genpts+nobuffer $AUDIO_IN $VIDEO_IN -codec:a $AUDIO_OUT -codec:v $VIDEO_OUT -f flv -flvflags no_duration_filesize $STREAM_URL/$STREAM_KEY &
   ffmpeg_process=$!
 
   echo "Stream started."
