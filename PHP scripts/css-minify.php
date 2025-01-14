@@ -1,5 +1,5 @@
 <?php
-	/* This script combines the contens of CSS files and strips out unnecessary content to create a smaller, single file for faster page loads.
+	/* This script combines the contents of CSS files and strips out unnecessary content to create a smaller, single file for faster page loads.
 	 * 
 	 * It doesn't aim for perfect minification. For that, to avoid things like the removal of spaces inside strings would be complex.
 	 * We'd probably need to do actual lexical analysis and transpile CSS back into CSS for accuracy, which seems overkill.
