@@ -24,11 +24,14 @@ sudo ./update_chroot.sh --rebuild
 # Some of these might already exist after running the above, so check for each before creating
 sudo mkdir /var/www/vhosts/chroot/usr/share
 sudo mkdir /var/www/vhosts/chroot/usr/lib64
+sudo mkdir /var/www/vhosts/chroot/usr/lib64/plesk-9.0
 sudo mkdir /var/www/vhosts/chroot/etc/ssl
 
 # Important files and libraries.
 sudo cp -a /usr/share/zoneinfo /var/www/vhosts/chroot/usr/share/zoneinfo
 sudo cp -a /usr/lib64/*.so* /var/www/vhosts/chroot/usr/lib64/
+sudo cp -a /usr/lib64/plesk-9.0/composer.phar /var/www/vhosts/chroot/usr/lib64/plesk-9.0/
+
 # On some distributions MariaDB uses the same mysql binary, but others user a mariadb binary instead
 sudo cp -a /usr/lib64/mysql /var/www/vhosts/chroot/usr/lib64/
 sudo cp -a /usr/lib64/mariadb /var/www/vhosts/chroot/usr/lib64/
@@ -90,6 +93,9 @@ sudo ./update_chroot.sh --add curl
 # Adds DNS lookup stuff to the environment. This might not be needed actually. You could "sudo chroot /var/www/vhosts/chroot" and test "curl http://www.google.com" first to check.
 sudo ./update_chroot.sh --add named
 sudo ./update_chroot.sh --add nslookup
+
+# Adds the PHP Composer binary, so that Composer commands can be used within the environment
+sudo ./update_chroot.sh --add /usr/bin/composer
 
 # Adds /usr/bin/env and /bin/env to the environment. Some frameworks like PHP Composer and Grav execute programs through this.
 sudo ./update_chroot.sh --add env
