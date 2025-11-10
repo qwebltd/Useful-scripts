@@ -11,10 +11,10 @@
 IPTABLES="/sbin/iptables";
 
 # list of known spammers
-URL="www.spamhaus.org/drop/drop.lasso";
+URL="https://www.spamhaus.org/drop/drop.txt";
 
 # save local copy here
-FILE="/tmp/drop.lasso";
+FILE="/tmp/drop.txt";
 
 # iptables custom chain
 CHAIN="Spamhaus";
