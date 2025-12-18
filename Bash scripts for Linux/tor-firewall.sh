@@ -6,61 +6,97 @@
 # This is essentially just a rehash of our Spamhaus firewall script, but uses an IP list by
 # Daniel Austin, https://www.dan.me.uk
 
-# path to iptables
+# Path to IPTables
 IPTABLES="/sbin/iptables";
+IP6TABLES="/sbin/ip6tables";
 
-# list of known Tor exit nodes
+# List of known Tor exit nodes
 URL="https://www.dan.me.uk/torlist/?exit";
 
-# save local copy here
+# Save local copy here
 FILE="/tmp/tor.txt";
 
-# iptables custom chain
+# IPTables custom chain
 CHAIN="Tor";
 
-# check to see if the chain already exists
+# Check to see if the chain already exists
+
 $IPTABLES -L $CHAIN -n
 
-# check to see if the chain already exists
 if [ $? -eq 0 ]; then
 
-    # flush the old rules
+    # Flush the old rules
     $IPTABLES -F $CHAIN
 
-    echo "Flushed old rules. Applying updated Tor exit nodes list...."
+    echo "Flushed old IPv4 rules."
 
 else
 
-    # create a new chain set
+    # Create a new chain set
     $IPTABLES -N $CHAIN
 
-    # tie chain to input rules so it runs
+    # Tie chain to input rules so it runs
     $IPTABLES -A INPUT -j $CHAIN
 
-    # don't allow this traffic through
+    # Don't allow this traffic through
     $IPTABLES -A FORWARD -j $CHAIN
 
-    echo "Chain not detected. Creating new chain and adding Tor exit nodes list...."
+    echo "Creating new chain for IPv4 rules."
 
 fi;
 
-# get a copy of the IP list
+$IP6TABLES -L $CHAIN -n
+
+if [ $? -eq 0 ]; then
+
+    # Flush the old rules
+    $IP6TABLES -F $CHAIN
+
+    echo "Flushed old IPv6 rules."
+
+else
+
+    # Create a new chain set
+    $IP6TABLES -N $CHAIN
+
+    # Tie chain to input rules so it runs
+    $IP6TABLES -A INPUT -j $CHAIN
+
+    # Don't allow this traffic through
+    $IP6TABLES -A FORWARD -j $CHAIN
+
+    echo "Creating new chain for IPv6 rules."
+
+fi;
+
+echo "Fetching new Tor exit nodes list."
+
+# Get a copy of the IP list
 wget -qc $URL -O $FILE
 
-# iterate through the IPs
+# Iterate through the IPs
 for IP in $( cat $FILE ); do
 
-    # add the ip address log rule to the chain
-    $IPTABLES -A $CHAIN -p 0 -s $IP -j LOG --log-prefix "[TOR BLOCK]" -m limit --limit 3/min --limit-burst 10
+    # Is this an IPv4 or IPv6?
+    if [[ $IP == *":"* ]]; then
 
-    # add the ip address to the chain
-    $IPTABLES -A $CHAIN -p 0 -s $IP -j DROP
+        echo "Adding IPv6: $IP";
 
-    echo $IP
+        # Add the ip address to the IPv6 chain
+        $IP6TABLES -A $CHAIN -p 0 -s $IP -j DROP
+
+    else
+
+        echo "Adding IPv4: $IP";
+
+        # Add the ip address to the IPv4 chain
+        $IPTABLES -A $CHAIN -p 0 -s $IP -j DROP
+
+    fi;
 
 done
 
 echo "Done!"
 
-# remove the list
+# Remove the list
 unlink $FILE
