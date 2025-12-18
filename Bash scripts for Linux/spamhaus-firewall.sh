@@ -3,65 +3,111 @@
 # Set this script up as a Cron job to run every morning, and it'll keep the IPTables firewall
 # updated with current Spamhaus block lists.
 #
-# Based off of the following two scripts
+# Originally based off of the following two scripts
 # http://www.theunsupported.com/2012/07/block-malicious-ip-addresses/
 # http://www.cyberciti.biz/tips/block-spamming-scanning-with-iptables.html
 
-# path to iptables
+# Path to IPTables
 IPTABLES="/sbin/iptables";
+IP6TABLES="/sbin/ip6tables";
 
-# list of known spammers
-URL="https://www.spamhaus.org/drop/drop.txt";
+# List of known spammers
+URL4="https://www.spamhaus.org/drop/drop_v4.json";
+URL6="https://www.spamhaus.org/drop/drop_v6.json";
 
-# save local copy here
-FILE="/tmp/drop.txt";
+# Save local copy here
+FILE4="/tmp/drop4.txt";
+FILE6="/tmp/drop6.txt";
 
-# iptables custom chain
+# IPTables custom chain
 CHAIN="Spamhaus";
 
-# check to see if the chain already exists
+# Check to see if the chain already exists
+
 $IPTABLES -L $CHAIN -n
 
-# check to see if the chain already exists
 if [ $? -eq 0 ]; then
 
-    # flush the old rules
+    # Flush the old rules
     $IPTABLES -F $CHAIN
 
-    echo "Flushed old rules. Applying updated Spamhaus list...."
+    echo "Flushed old IPv4 rules."
 
 else
 
-    # create a new chain set
+    # Create a new chain set
     $IPTABLES -N $CHAIN
 
-    # tie chain to input rules so it runs
+    # Tie chain to input rules so it runs
     $IPTABLES -A INPUT -j $CHAIN
 
-    # don't allow this traffic through
+    # Don't allow this traffic through
     $IPTABLES -A FORWARD -j $CHAIN
 
-    echo "Chain not detected. Creating new chain and adding Spamhaus list...."
+    echo "Creating new chain for IPv4 rules."
 
 fi;
 
-# get a copy of the spam list
-wget -qc $URL -O $FILE
+$IP6TABLES -L $CHAIN -n
 
-# iterate through all known spamming hosts
-for IP in $( cat $FILE | egrep -v '^;' | awk '{ print $1}' ); do
+if [ $? -eq 0 ]; then
 
-    # add the ip address log rule to the chain
-    $IPTABLES -A $CHAIN -p 0 -s $IP -j LOG --log-prefix "[SPAMHAUS BLOCK]" -m limit --limit 3/min --limit-burst 10
+    # Flush the old rules
+    $IP6TABLES -F $CHAIN
 
-    # add the ip address to the chain
-    $IPTABLES -A $CHAIN -p 0 -s $IP -j DROP
+    echo "Flushed old IPv6 rules."
 
-    echo $IP
+else
+
+    # Create a new chain set
+    $IP6TABLES -N $CHAIN
+
+    # Tie chain to input rules so it runs
+    $IP6TABLES -A INPUT -j $CHAIN
+
+    # Don't allow this traffic through
+    $IP6TABLES -A FORWARD -j $CHAIN
+
+    echo "Creating new chain for IPv6 rules."
+
+fi;
+
+echo "Fetching new IPv4 list.";
+
+# Get a copy of the IP lists
+wget -qc $URL4 -O $FILE4
+wget -qc $URL6 -O $FILE6
+
+# Iterate through the IPs
+
+for IP in $( cat $FILE4 | jq -r '.cidr' ); do
+
+    if [ $IP != "null" ]; then
+
+        echo "Adding IPv4: $IP";
+
+        # Add the IP address to the chain
+        $IPTABLES -A $CHAIN -p 0 -s $IP -j DROP
+
+    fi;
+
+done
+
+for IP in $( cat $FILE6 | jq -r '.cidr' ); do
+
+    if [ $IP != "null" ]; then
+
+        echo "Adding IPv6: $IP";
+
+        # Add the IP address to the chain
+        $IP6TABLES -A $CHAIN -p 0 -s $IP -j DROP
+
+    fi;
 
 done
 
 echo "Done!"
 
-# remove the spam list
-unlink $FILE
+# Remove the lists
+unlink $FILE4
+unlink $FILE6
