@@ -28,18 +28,15 @@ if [ $? -eq 0 ]; then
     # Flush the old rules
     $IPTABLES -F $CHAIN
 
+    # Also remove the INPUT tie if it exists, so that we can recreate it at the top
+    $IPTABLES -D INPUT -j $CHAIN
+
     echo "Flushed old IPv4 rules."
 
 else
 
     # Create a new chain set
     $IPTABLES -N $CHAIN
-
-    # Tie chain to input rules so it runs
-    $IPTABLES -A INPUT -j $CHAIN
-
-    # Don't allow this traffic through
-    $IPTABLES -A FORWARD -j $CHAIN
 
     echo "Creating new chain for IPv4 rules."
 
@@ -52,6 +49,9 @@ if [ $? -eq 0 ]; then
     # Flush the old rules
     $IP6TABLES -F $CHAIN
 
+    # Also remove the INPUT tie if it exists, so that we can recreate it at the top
+    $IP6TABLES -D INPUT -j $CHAIN
+
     echo "Flushed old IPv6 rules."
 
 else
@@ -59,15 +59,17 @@ else
     # Create a new chain set
     $IP6TABLES -N $CHAIN
 
-    # Tie chain to input rules so it runs
-    $IP6TABLES -A INPUT -j $CHAIN
-
-    # Don't allow this traffic through
-    $IP6TABLES -A FORWARD -j $CHAIN
-
     echo "Creating new chain for IPv6 rules."
 
 fi;
+
+# We're going to tie these chains to INPUT, so make sure the last rule returns back there
+$IPTABLES -A $CHAIN -j RETURN
+$IP6TABLES -A $CHAIN -j RETURN
+
+# Tie chains to input
+$IPTABLES -I INPUT 1 -j $CHAIN
+$IP6TABLES -I INPUT 1 -j $CHAIN
 
 echo "Fetching new Tor exit nodes list."
 
@@ -83,14 +85,14 @@ for IP in $( cat $FILE ); do
         echo "Adding IPv6: $IP";
 
         # Add the ip address to the IPv6 chain
-        $IP6TABLES -A $CHAIN -p 0 -s $IP -j DROP
+        $IP6TABLES -I $CHAIN 1 -p 0 -s $IP -j DROP
 
     else
 
         echo "Adding IPv4: $IP";
 
         # Add the ip address to the IPv4 chain
-        $IPTABLES -A $CHAIN -p 0 -s $IP -j DROP
+        $IPTABLES -I $CHAIN 1 -p 0 -s $IP -j DROP
 
     fi;
 
