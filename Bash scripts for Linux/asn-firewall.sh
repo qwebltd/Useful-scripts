@@ -107,17 +107,17 @@ echo "Fetching new ASNs list.";
 wget -qc $URL -O $FILE
 
 # Iterate the downloaded ASNs and also the custom additions defined above
-for ASN in $( cat $FILE | jq -r '.asn' && printf '%s\n' "${ASNLIST[@]}" ); do
+for ASN in $( { jq -r '.asn' $FILE; printf '%s\n' "${ASNLIST[@]}"; } | sort -u ); do
 
 	if [ $ASN != "null" ]; then
 
 		# Convert the ASN into an IP list
 		wget -qN "https://apis.qweb.co.uk/asn-lookup/$ASNLOOKUPKEY/$ASN.json" -O $FILEIPS
 
-		if [[ "$(cat $FILEIPS | jq -r '.answer')" == "success" ]]; then
+		if [[ "$( jq -r '.answer' $FILEIPS )" == "success" ]]; then
 
 			# Iterate through the IPs
-			for IP in $( cat $FILEIPS | jq -r '.ipv4[]' ); do
+			for IP in $( jq -r '.ipv4[]' $FILEIPS ); do
 
 				if [ $IP != "null" ]; then
 
@@ -130,7 +130,7 @@ for ASN in $( cat $FILE | jq -r '.asn' && printf '%s\n' "${ASNLIST[@]}" ); do
 
 			done
 
-			for IP in $( cat $FILEIPS | jq -r '.ipv6[]' ); do
+			for IP in $( jq -r '.ipv6[]' $FILEIPS ); do
 
 				if [ $IP != "null" ]; then
 
@@ -145,7 +145,7 @@ for ASN in $( cat $FILE | jq -r '.asn' && printf '%s\n' "${ASNLIST[@]}" ); do
 
 		else
 
-			echo "$(cat $FILEIPS | jq -r '.answer')";
+			echo "$( jq -r '.answer' $FILEIPS )";
 
 		fi;
 
