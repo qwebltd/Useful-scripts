@@ -82,7 +82,7 @@ wget -qc $URL6 -O $FILE6
 
 # Iterate through the IPs
 
-for IP in $( cat $FILE4 | jq -r '.cidr' ); do
+for IP in $( jq -r '.cidr' $FILE4 ); do
 
     if [ $IP != "null" ]; then
 
@@ -95,7 +95,7 @@ for IP in $( cat $FILE4 | jq -r '.cidr' ); do
 
 done
 
-for IP in $( cat $FILE6 | jq -r '.cidr' ); do
+for IP in $( jq -r '.cidr' $FILE6 ); do
 
     if [ $IP != "null" ]; then
 
